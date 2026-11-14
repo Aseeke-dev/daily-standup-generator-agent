@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from .schema import StandUpUpdate
+from .prompts import prompt
 from .mock_calender import YESTERDAY_MEETINGS, TODAY_MEETINGS
 
 load_dotenv()
@@ -20,15 +21,6 @@ def generate_standup():
     llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash-lite")
     
     structured_llm = llm.with_structured_output(StandUpUpdate)
-    
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", """You are a strict assistant generating a daily stand-up update. 
-        Extract completed tasks and yesterday's meetings for the 'yesterday' field. 
-        Extract 'In Progress' tasks and today's meetings for the 'today' field. 
-        Identify any blockers for the 'blockers' field. 
-        Format all fields as clean, professional bullet points."""),
-        ("human", "Tasks Data:\n{tasks}\n\nCalendar Data:\n{calendar}")
-    ])
     
     chain = prompt | structured_llm
     
