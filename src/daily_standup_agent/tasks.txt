@@ -1,0 +1,7 @@
+DONE:
+- Wrote the project brief for the AI rollout.
+- Fixed the database indexing bug.
+
+IN PROGRESS:
+- Building the Daily Stand-Up Agent Phase 1.
+- Reviewing PR #402 (UI components).
