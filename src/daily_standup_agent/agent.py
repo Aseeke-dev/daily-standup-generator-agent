@@ -1,38 +1,35 @@
 import os
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnableParallel, RunnableLambda
 from .schema import StandUpUpdate
 from .prompts import prompt
-from .mock_calender import YESTERDAY_MEETINGS, TODAY_MEETINGS
+from .tools.calender_tool import fetch_calendar_events
+from .tools.jira_tool import fetch_jira_tickets
 
 load_dotenv()
-
-def read_task():
-    with open("tasks.txt", "r") as file:
-        return file.read()
     
 def generate_standup():
-    print("🚀 Starting Phase 1 Sandbox Test...\n")
     
-    tasks_data = read_task()
-    calender_data = f"Yesterday's Meetings: {YESTERDAY_MEETINGS}\n Today's Meetings: {TODAY_MEETINGS}\n"
+    parallel_fetcher = RunnableParallel(
+        calendar = RunnableLambda(lambda x: fetch_calendar_events()),
+        tasks = RunnableLambda(lambda x: fetch_jira_tickets())
+    )
     
     llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash-lite")
-    
     structured_llm = llm.with_structured_output(StandUpUpdate)
     
-    chain = prompt | structured_llm
+    chain = parallel_fetcher | prompt | structured_llm
     
-    result = chain.invoke({
-        "tasks": tasks_data,
-        "calendar": calender_data
-    })
+    result = chain.invoke({})
     
-    print("--- Generated Result ---")
-    print(f"**Yesterday, I..**\n{result.yesterday}\n")
-    print(f"**Today, I...**\n{result.today}\n")
-    print(f"**Blockers:**\n{result.blockers}\n")
+    print("\n==============================")
+    print("📢 LIVE GENERATED STAND-UP")
+    print("==============================")
+    print(f"**Yesterday I...**\n{result.yesterday}\n")
+    print(f"**Today I...**\n{result.today}\n")
+    print(f"**Blockers:**\n{result.blockers}")
+    print("==============================")
 
 
 if __name__ == "__main__":
