@@ -6,6 +6,7 @@ from .schema import StandUpUpdate
 from .prompts import prompt
 from .tools.calender_tool import fetch_calendar_events
 from .tools.jira_tool import fetch_jira_tickets
+from .tools.slack_tool import post_to_slack
 
 load_dotenv()
     
@@ -23,13 +24,17 @@ def generate_standup():
     
     result = chain.invoke({})
     
+    formatted_standup = f"*Yesterday I...*\n{result.yesterday}\n\n*Today I...*\n{result.today}\n\n*Blockers:*\n{result.blockers}"
+    
     print("\n==============================")
     print("📢 LIVE GENERATED STAND-UP")
     print("==============================")
-    print(f"**Yesterday I...**\n{result.yesterday}\n")
-    print(f"**Today I...**\n{result.today}\n")
-    print(f"**Blockers:**\n{result.blockers}")
+    print(formatted_standup)
     print("==============================")
+    
+    print("Posting up update to slack...")
+    slack_response = post_to_slack(formatted_standup)
+    print(slack_response)
 
 
 if __name__ == "__main__":
